@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TempoQuest | Learn Through Music</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+        <div class="brand">
+            <div class="logo-icon">🎵</div>
+            <h1>TempoQuest</h1>
+        </div>
+        <div class="user-controls hidden" id="userControls">
+            <div class="stat-pill" title="Current Streak">🔥 <span id="streakCount">1</span> Day</div>
+            <div class="stat-pill" title="Tempo Notes Earned">⭐ <span id="starCount">0</span></div>
+            <button class="btn-secondary btn-small" id="btnOpenGoal">🎯 Daily Goal</button>
+            <button class="btn-outline btn-small" id="btnLogout">Switch Player</button>
+        </div>
+    </header>
+
+    <!-- AI Helper Mascot (Always Present) -->
+    <aside class="mascot-container" id="mascotContainer">
+        <div class="speech-bubble" id="mascotSpeech">
+            Hi! I'm <strong>Bop</strong>! Pick a profile or create yours to start our musical adventure!
+        </div>
+        <div class="mascot-avatar" id="mascotAvatar" role="button" tabindex="0" aria-label="Bop the AI Helper">
+            <div class="antenna"></div>
+            <div class="head">
+                <div class="headphones left"></div>
+                <div class="face">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="mouth"></div>
+                </div>
+                <div class="headphones right"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main View Container -->
+    <main class="main-stage">
+
+        <!-- VIEW 1: Login / Profile Selection -->
+        <section id="viewLogin" class="view active">
+            <div class="hero-card">
+                <h2>Who is ready to rock & learn?</h2>
+                <p>Choose your explorer badge or make a new one!</p>
+                
+                <div class="profile-grid" id="profileGrid">
+                    <!-- Populated via JS -->
+                </div>
+
+                <form id="newProfileForm" class="new-profile-form">
+                    <input type="text" id="playerNameInput" placeholder="Enter your name..." maxlength="15" required>
+                    <select id="ageGroupSelect" aria-label="Select Age Group">
+                        <option value="4-6">Ages 4–6 (Little Beats)</option>
+                        <option value="7-9" selected>Ages 7–9 (Rhythm Riders)</option>
+                        <option value="10-12">Ages 10–12 (Maestro Makers)</option>
+                    </select>
+                    <button type="submit" class="btn-primary">Start Adventure 🚀</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- VIEW 2: Skill Placement Test -->
+        <section id="viewPlacement" class="view hidden">
+            <div class="card-container">
+                <div class="badge-tag">Quick Soundcheck</div>
+                <h2 id="placementTitle">Let's tune your learning path!</h2>
+                <p id="placementPrompt">Listen to the beat or solve the puzzle so Bop knows where to start.</p>
+                
+                <div class="quiz-box" id="placementQuizBox">
+                    <!-- Dynamic Question Content -->
+                </div>
+                <div class="progress-dots" id="placementDots"></div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: Personalized Learning Hub -->
+        <section id="viewDashboard" class="view hidden">
+            <!-- Continuous Learning & Goal Tracker Banner -->
+            <div class="goal-banner">
+                <div class="goal-info">
+                    <h3>Today's Learning Jam: <span id="goalProgressText">0 / 3 Mini-Games</span></h3>
+                    <p id="evolutionStatus">Level 1 Explorer • Keep playing to unlock Infinity Encore mode!</p>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="goalProgressBar" style="width: 0%;"></div>
+                </div>
+                <button class="btn-accent hidden" id="btnNextTier">🌟 Goal Hit! Level Up Difficulty</button>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div class="filter-bar">
+                <button class="filter-pill active" data-filter="all">All Worlds</button>
+                <button class="filter-pill" data-filter="stem">STEM & Math</button>
+                <button class="filter-pill" data-filter="literacy">Reading & Spelling</button>
+                <button class="filter-pill" data-filter="sel">Emotions & Manners</button>
+                <button class="filter-pill" data-filter="arts">Music & Culture</button>
+            </div>
+
+            <!-- 12 Subjects Grid -->
+            <div class="subjects-grid" id="subjectsGrid">
+                <!-- Populated via JS -->
+            </div>
+        </section>
+
+        <!-- VIEW 4: Interchangeable Music Mini-Game Stage -->
+        <section id="viewGame" class="view hidden">
+            <div class="game-header">
+                <button class="btn-outline" id="btnBackToHub">⬅ Back to Worlds</button>
+                <div class="game-meta">
+                    <span class="subject-badge" id="activeSubjectBadge">Math</span>
+                    <span class="level-badge" id="activeLevelBadge">Level 1</span>
+                </div>
+                <button class="btn-secondary" id="btnSwitchMechanic" title="Change the music mini-game style!">🔄 Swap Game Style</button>
+            </div>
+
+            <div class="game-arena" id="gameArena">
+                <!-- Dynamic Mini-Game Canvas/Controls injected here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Goal Setting Modal -->
+    <div class="modal-overlay hidden" id="goalModal">
+        <div class="modal-card">
+            <h3>🎯 Set Your Daily Tempo Goal</h3>
+            <p>Even after you hit your goal, Bop will keep unlocking bonus levels so you never stop growing!</p>
+            <div class="goal-options">
+                <button class="goal-choice" data-goal="2">2 Games (Warm-up)</button>
+                <button class="goal-choice active" data-goal="3">3 Games (Rockstar)</button>
+                <button class="goal-choice" data-goal="5">5 Games (Super Maestro)</button>
+            </div>
+            <button class="btn-primary" id="btnCloseGoal">Save Goal</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
