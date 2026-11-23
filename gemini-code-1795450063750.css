@@ -101,6 +101,12 @@ h1, h2, h3, button { font-family: 'Fredoka', sans-serif; }
     font-size: 0.88rem;
 }
 
+.stat-pill.synced {
+    background: #E6FCF5;
+    border-color: var(--green);
+    color: #087F5B;
+}
+
 /* Buttons */
 button {
     border: none;
