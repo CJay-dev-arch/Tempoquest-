@@ -1,4 +1,108 @@
 /* =========================================
+   0. SUPABASE CLIENT & CLOUD SYNC
+   ========================================= */
+const SUPABASE_URL = 'https://qdysogystxbjfcioevqg.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_tEQoueWMbK05j-zewiKQ_w_nIh1VwDd';
+
+const supabaseClient = (
+    window.supabase &&
+    SUPABASE_URL.startsWith('https://') &&
+    !SUPABASE_ANON_KEY.startsWith('YOUR_')
+) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+let isCloudSynced = false;
+
+function setCloudBadge(synced) {
+    isCloudSynced = synced;
+    const badge = document.getElementById('cloudStatus');
+    if (!badge) return;
+    badge.textContent = synced ? '☁️ Supabase' : '☁️ Local';
+    badge.classList.toggle('synced', synced);
+}
+
+function serializeExplorer(p) {
+    return {
+        id: p.id,
+        name: p.name,
+        age: p.age,
+        avatar: p.avatar,
+        stars: p.stars,
+        streak: p.streak,
+        daily_goal: p.dailyGoal,
+        completed_today: p.completedToday,
+        tested: Boolean(p.tested),
+        unlocked_wardrobe: p.unlockedWardrobe || [],
+        mastery: p.mastery || {}
+    };
+}
+
+function hydrateExplorer(row) {
+    const base = defaultMastery(1);
+    if (row.mastery && typeof row.mastery === 'object') {
+        Object.keys(row.mastery).forEach(k => {
+            if (base[k]) base[k] = row.mastery[k];
+        });
+    }
+    return {
+        id: row.id,
+        name: row.name,
+        age: row.age || '7-9',
+        avatar: row.avatar || '🌟',
+        stars: Number(row.stars ?? 0),
+        streak: Number(row.streak ?? 1),
+        dailyGoal: Number(row.daily_goal ?? 3),
+        completedToday: Number(row.completed_today ?? 0),
+        tested: Boolean(row.tested),
+        unlockedWardrobe: Array.isArray(row.unlocked_wardrobe) ? row.unlocked_wardrobe : [],
+        mastery: base
+    };
+}
+
+async function syncExplorerToSupabase(profile) {
+    if (!supabaseClient || !profile) return;
+    const { error } = await supabaseClient
+        .from('explorers')
+        .upsert(serializeExplorer(profile), { onConflict: 'id' });
+    if (error) {
+        console.warn('Supabase sync skipped/failed:', error.message);
+        setCloudBadge(false);
+    } else {
+        setCloudBadge(true);
+    }
+}
+
+async function loadExplorersFromSupabase() {
+    if (!supabaseClient) {
+        setCloudBadge(false);
+        return;
+    }
+    const { data, error } = await supabaseClient
+        .from('explorers')
+        .select('*')
+        .order('name', { ascending: true });
+
+    if (error) {
+        console.warn('Supabase load error:', error.message);
+        setCloudBadge(false);
+        return;
+    }
+
+    setCloudBadge(true);
+    if (data && data.length > 0) {
+        appState.profiles = data.map(hydrateExplorer);
+        if (!appState.profiles.some(p => p.id === appState.activeId)) {
+            appState.activeId = appState.profiles[0].id;
+        }
+        saveApp();
+    } else {
+        // Seed initial profiles into Supabase on first run
+        for (const p of appState.profiles) {
+            await syncExplorerToSupabase(p);
+        }
+    }
+}
+
+/* =========================================
    1. WEB AUDIO SYNTHESIZER
    ========================================= */
 const AudioEngine = {
@@ -131,13 +235,17 @@ let appState = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
         }
     ],
     questSubjectId: 'math',
-    questStyle: 'pads', // 'pads' | 'sequencer'
+    questStyle: 'pads',
     placementStep: 0,
     placementScore: 0
 };
 
-function saveApp() {
+function saveApp(profileToSync = null) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    const target = profileToSync || currentExplorer();
+    if (target) {
+        syncExplorerToSupabase(target);
+    }
 }
 
 function currentExplorer() {
@@ -193,7 +301,7 @@ document.getElementById('btnEncoreBoost').onclick = () => {
     const u = currentExplorer();
     u.dailyGoal += 2;
     u.stars += 10;
-    saveApp();
+    saveApp(u);
     refreshHUD();
     AudioEngine.win();
     sayMascot(`Encore unlocked! +10 ⭐ bonus and a new stretch goal of <strong>${u.dailyGoal}</strong>!`);
@@ -246,7 +354,7 @@ window.pickPlacement = function(idx) {
         const startLvl = appState.placementScore >= 2 ? 2 : 1;
         u.mastery = defaultMastery(startLvl);
         u.tested = true;
-        saveApp();
+        saveApp(u);
         renderSubjectsGrid();
         switchTab('classroom');
         sayMascot(`Soundcheck complete, <strong>${u.name}</strong>! Subjects tuned to <strong>Level ${startLvl}</strong>!`);
@@ -383,11 +491,11 @@ window.submitQuestAnswer = function(chosen, correct, freq) {
             m.level += 1;
             m.xp = 0;
         }
-        saveApp();
+        saveApp(u);
         refreshHUD();
         renderSubjectsGrid();
         document.getElementById('questLevelLabel').textContent = `Level ${m.level}`;
-        sayMascot(`⭐ +10 Stars! ${currentExplorer().name} is now <strong>Level ${m.level}</strong>!`);
+        sayMascot(`⭐ +10 Stars! ${u.name} is now <strong>Level ${m.level}</strong>!`);
         setTimeout(renderQuestArena, 900);
     } else {
         AudioEngine.tryAgain();
@@ -520,7 +628,7 @@ function renderWardrobe() {
             } else if (u.stars >= item.cost) {
                 u.stars -= item.cost;
                 u.unlockedWardrobe.push(item.id);
-                saveApp();
+                saveApp(u);
                 refreshHUD();
                 renderWardrobe();
                 AudioEngine.win();
@@ -544,12 +652,14 @@ document.querySelectorAll('.choice-btn').forEach(btn => {
     btn.onclick = () => {
         document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        currentExplorer().dailyGoal = parseInt(btn.dataset.goal, 10);
-        saveApp();
+        const u = currentExplorer();
+        u.dailyGoal = parseInt(btn.dataset.goal, 10);
+        saveApp(u);
     };
 });
 
-document.getElementById('btnExplorerModal').onclick = () => {
+document.getElementById('btnExplorerModal').onclick = async () => {
+    await loadExplorersFromSupabase();
     const list = document.getElementById('explorerList');
     list.innerHTML = '';
     appState.profiles.forEach(p => {
@@ -558,7 +668,7 @@ document.getElementById('btnExplorerModal').onclick = () => {
         b.textContent = `${p.avatar} ${p.name}`;
         b.onclick = () => {
             appState.activeId = p.id;
-            saveApp();
+            saveApp(p);
             document.getElementById('explorerModal').classList.add('hidden');
             refreshHUD();
             renderSubjectsGrid();
@@ -574,13 +684,13 @@ document.getElementById('btnCloseExplorerModal').onclick = () => {
     document.getElementById('explorerModal').classList.add('hidden');
 };
 
-document.getElementById('createExplorerForm').onsubmit = e => {
+document.getElementById('createExplorerForm').onsubmit = async e => {
     e.preventDefault();
     const name = document.getElementById('newExplorerName').value.trim();
     const age = document.getElementById('newExplorerAge').value;
     if (!name) return;
     const newId = 'exp_' + Date.now();
-    appState.profiles.push({
+    const created = {
         id: newId,
         name,
         age,
@@ -592,10 +702,11 @@ document.getElementById('createExplorerForm').onsubmit = e => {
         tested: false,
         unlockedWardrobe: [],
         mastery: defaultMastery(1)
-    });
+    };
+    appState.profiles.push(created);
     appState.activeId = newId;
     document.getElementById('newExplorerName').value = '';
-    saveApp();
+    saveApp(created);
     document.getElementById('explorerModal').classList.add('hidden');
     refreshHUD();
     startPlacement();
@@ -607,6 +718,7 @@ document.getElementById('btnParentModal').onclick = () => {
         <p><strong>Explorer:</strong> ${u.avatar} ${u.name} (Ages ${u.age})</p>
         <p><strong>Stars:</strong> ⭐ ${u.stars} | <strong>Streak:</strong> 🔥 ${u.streak} days</p>
         <p><strong>Today's Quests:</strong> ${u.completedToday} / ${u.dailyGoal}</p>
+        <p><strong>Storage Mode:</strong> ${isCloudSynced ? 'Connected to Supabase' : 'Local browser fallback'}</p>
     `;
     document.getElementById('parentModal').classList.remove('hidden');
 };
@@ -635,9 +747,10 @@ document.getElementById('openBeatTapper').onclick = () => {
         AudioEngine.tone(146.83, 0.15, 'triangle');
         document.getElementById('tapScore').textContent = `Score: ${score}`;
         if (score === 50) {
-            currentExplorer().stars += 25;
-            currentExplorer().completedToday += 1;
-            saveApp();
+            const u = currentExplorer();
+            u.stars += 25;
+            u.completedToday += 1;
+            saveApp(u);
             refreshHUD();
             AudioEngine.win();
             sayMascot('🎉 50 points! You earned <strong>+25 ⭐</strong>!');
@@ -679,7 +792,7 @@ document.getElementById('mascotAvatar').onclick = () => {
     sayMascot('Tip: Tap <strong>All 12 Subjects</strong> and hit <strong>Swap Game Style</strong> inside any quest!');
 };
 
-// Boot
+// Boot (local first for instant render, then hydrate from Supabase)
 refreshHUD();
 renderABC();
 renderQuickSubjects();
@@ -688,3 +801,9 @@ renderXylophone();
 renderDJ();
 renderJukebox();
 renderWardrobe();
+
+loadExplorersFromSupabase().then(() => {
+    refreshHUD();
+    renderSubjectsGrid();
+    renderWardrobe();
+});
