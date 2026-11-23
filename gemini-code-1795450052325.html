@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TempoQuest | Learn Through Music</title>
+    <title>Melody Minds | Learn Through Music</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
@@ -11,136 +11,219 @@
 </head>
 <body>
 
-    <!-- Top Navigation Bar -->
     <header class="app-header">
-        <div class="brand">
+        <div class="brand" id="brandHome" title="Back to Classroom">
             <div class="logo-icon">🎵</div>
-            <h1>TempoQuest</h1>
+            <div>
+                <h1>Melody Minds</h1>
+                <span class="tagline">Learn Through Music</span>
+            </div>
         </div>
-        <div class="user-controls hidden" id="userControls">
-            <div class="stat-pill" title="Current Streak">🔥 <span id="streakCount">1</span> Day</div>
-            <div class="stat-pill" title="Tempo Notes Earned">⭐ <span id="starCount">0</span></div>
-            <button class="btn-secondary btn-small" id="btnOpenGoal">🎯 Daily Goal</button>
-            <button class="btn-outline btn-small" id="btnLogout">Switch Player</button>
+
+        <nav class="top-tabs" id="topTabs">
+            <button class="tab-btn active" data-tab="classroom">🏫 Classroom</button>
+            <button class="tab-btn" data-tab="map">🗺️ All 12 Subjects</button>
+            <button class="tab-btn" data-tab="xylophone">🎹 Xylophone</button>
+            <button class="tab-btn" data-tab="dj">🥁 DJ Beats</button>
+            <button class="tab-btn" data-tab="jukebox">🎶 Jukebox</button>
+            <button class="tab-btn" data-tab="wardrobe">👑 Wardrobe</button>
+        </nav>
+
+        <div class="user-controls" id="userControls">
+            <div class="stat-pill">🔥 <span id="streakCount">4d</span></div>
+            <div class="stat-pill">⭐ <span id="starCount">65</span></div>
+            <button class="btn-secondary btn-small" id="btnGoalModal">🎯 Goal</button>
+            <button class="btn-outline btn-small" id="btnExplorerModal">🦁 <span id="activeExplorerName">Leo</span></button>
+            <button class="btn-outline btn-small" id="btnParentModal">👨‍👩‍👧</button>
         </div>
     </header>
 
-    <!-- AI Helper Mascot (Always Present) -->
+    <!-- Floating Mascot Helper -->
     <aside class="mascot-container" id="mascotContainer">
         <div class="speech-bubble" id="mascotSpeech">
-            Hi! I'm <strong>Bop</strong>! Pick a profile or create yours to start our musical adventure!
+            Hi, <strong>Leo</strong>! Tap an ABC letter, pick a subject quest, or jam in the studios!
         </div>
-        <div class="mascot-avatar" id="mascotAvatar" role="button" tabindex="0" aria-label="Bop the AI Helper">
-            <div class="antenna"></div>
-            <div class="head">
-                <div class="headphones left"></div>
-                <div class="face">
-                    <div class="eye left"></div>
-                    <div class="eye right"></div>
-                    <div class="mouth"></div>
-                </div>
-                <div class="headphones right"></div>
-            </div>
-        </div>
+        <button class="mascot-btn" id="mascotAvatar" aria-label="Chat with Melody">
+            <span class="mascot-emoji">🎶</span>
+        </button>
     </aside>
 
-    <!-- Main View Container -->
     <main class="main-stage">
 
-        <!-- VIEW 1: Login / Profile Selection -->
-        <section id="viewLogin" class="view active">
-            <div class="hero-card">
-                <h2>Who is ready to rock & learn?</h2>
-                <p>Choose your explorer badge or make a new one!</p>
-                
-                <div class="profile-grid" id="profileGrid">
-                    <!-- Populated via JS -->
-                </div>
-
-                <form id="newProfileForm" class="new-profile-form">
-                    <input type="text" id="playerNameInput" placeholder="Enter your name..." maxlength="15" required>
-                    <select id="ageGroupSelect" aria-label="Select Age Group">
-                        <option value="4-6">Ages 4–6 (Little Beats)</option>
-                        <option value="7-9" selected>Ages 7–9 (Rhythm Riders)</option>
-                        <option value="10-12">Ages 10–12 (Maestro Makers)</option>
-                    </select>
-                    <button type="submit" class="btn-primary">Start Adventure 🚀</button>
-                </form>
-            </div>
+        <!-- PLACEMENT SOUNDCHECK OVERLAY / VIEW -->
+        <section id="viewPlacement" class="card-panel hidden">
+            <span class="badge-pill">🎧 Quick Soundcheck</span>
+            <h2 id="placementTitle">Let's Tune Your Starting Level!</h2>
+            <p class="muted">3 quick music & skill questions so your subjects match where you are right now.</p>
+            <div id="placementBox" class="quest-box"></div>
         </section>
 
-        <!-- VIEW 2: Skill Placement Test -->
-        <section id="viewPlacement" class="view hidden">
-            <div class="card-container">
-                <div class="badge-tag">Quick Soundcheck</div>
-                <h2 id="placementTitle">Let's tune your learning path!</h2>
-                <p id="placementPrompt">Listen to the beat or solve the puzzle so Bop knows where to start.</p>
-                
-                <div class="quiz-box" id="placementQuizBox">
-                    <!-- Dynamic Question Content -->
-                </div>
-                <div class="progress-dots" id="placementDots"></div>
-            </div>
-        </section>
-
-        <!-- VIEW 3: Personalized Learning Hub -->
-        <section id="viewDashboard" class="view hidden">
-            <!-- Continuous Learning & Goal Tracker Banner -->
+        <!-- TAB 1: CLASSROOM (ABC Keys + Quick Subjects + Goal Banner + Mini-Games) -->
+        <section id="tab-classroom" class="tab-panel active">
             <div class="goal-banner">
-                <div class="goal-info">
-                    <h3>Today's Learning Jam: <span id="goalProgressText">0 / 3 Mini-Games</span></h3>
-                    <p id="evolutionStatus">Level 1 Explorer • Keep playing to unlock Infinity Encore mode!</p>
+                <div>
+                    <h3 id="goalBannerTitle">Today's Learning Jam: 1 / 3 Mini-Games</h3>
+                    <p id="goalBannerSub">Level 1 Explorer • Hit your goal to unlock Encore Boosts & keep evolving!</p>
                 </div>
                 <div class="progress-track">
-                    <div class="progress-fill" id="goalProgressBar" style="width: 0%;"></div>
+                    <div class="progress-fill" id="goalProgressBar" style="width: 33%;"></div>
                 </div>
-                <button class="btn-accent hidden" id="btnNextTier">🌟 Goal Hit! Level Up Difficulty</button>
+                <button class="btn-accent hidden" id="btnEncoreBoost">🌟 Goal Hit! +2 Stretch Goal</button>
             </div>
 
-            <!-- Category Filter Pills -->
-            <div class="filter-bar">
-                <button class="filter-pill active" data-filter="all">All Worlds</button>
-                <button class="filter-pill" data-filter="stem">STEM & Math</button>
-                <button class="filter-pill" data-filter="literacy">Reading & Spelling</button>
-                <button class="filter-pill" data-filter="sel">Emotions & Manners</button>
-                <button class="filter-pill" data-filter="arts">Music & Culture</button>
+            <div class="card-panel">
+                <h3>🏫 Musical ABC Classroom · Tap Any Letter to Sing!</h3>
+                <div class="abc-grid" id="abcGrid"></div>
             </div>
 
-            <!-- 12 Subjects Grid -->
-            <div class="subjects-grid" id="subjectsGrid">
-                <!-- Populated via JS -->
+            <div class="two-col">
+                <div class="card-panel">
+                    <h3>🚀 Quick Subject Quests</h3>
+                    <div class="quick-list" id="quickSubjectsList"></div>
+                </div>
+                <div class="card-panel">
+                    <h3>🎮 Music Mini-Games</h3>
+                    <div class="mini-game-cards">
+                        <button class="tile-btn" id="openBeatTapper">🥁 <strong>Beat Tapper</strong><span>Tap Beat 1 for +25 ⭐</span></button>
+                        <button class="tile-btn" id="openAnimalMatch">🦉 <strong>Animal Match</strong><span>Pair sounds & rhymes</span></button>
+                        <button class="tile-btn" id="openSongMaker">🎤 <strong>Song Maker</strong><span>Build a 4-line rhyme</span></button>
+                        <button class="tile-btn" id="openStorybook">📖 <strong>AI Storybook</strong><span>Create a musical tale</span></button>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- VIEW 4: Interchangeable Music Mini-Game Stage -->
-        <section id="viewGame" class="view hidden">
-            <div class="game-header">
-                <button class="btn-outline" id="btnBackToHub">⬅ Back to Worlds</button>
-                <div class="game-meta">
-                    <span class="subject-badge" id="activeSubjectBadge">Math</span>
-                    <span class="level-badge" id="activeLevelBadge">Level 1</span>
+        <!-- TAB 2: ALL 12 SUBJECTS & GRADE STAGE FILTER -->
+        <section id="tab-map" class="tab-panel hidden">
+            <div class="card-panel">
+                <div class="section-head">
+                    <div>
+                        <h2>🗺️ Complete 12-Subject Learning Map</h2>
+                        <p class="muted">Every subject has interchangeable mini-game styles and never stops leveling up.</p>
+                    </div>
+                    <div class="stage-pills" id="stagePills">
+                        <button class="filter-pill active" data-stage="all">All Stages</button>
+                        <button class="filter-pill" data-stage="prek">Pre-K (Ages 4–5)</button>
+                        <button class="filter-pill" data-stage="k">K–1 (Ages 6–7)</button>
+                        <button class="filter-pill" data-stage="g2">Grades 2–6 (Ages 8–12)</button>
+                    </div>
                 </div>
-                <button class="btn-secondary" id="btnSwitchMechanic" title="Change the music mini-game style!">🔄 Swap Game Style</button>
+                <div class="subjects-grid" id="allSubjectsGrid"></div>
             </div>
+        </section>
 
-            <div class="game-arena" id="gameArena">
-                <!-- Dynamic Mini-Game Canvas/Controls injected here -->
+        <!-- INTERCHANGEABLE SUBJECT QUEST STAGE -->
+        <section id="viewQuest" class="card-panel hidden">
+            <div class="quest-top">
+                <button class="btn-outline btn-small" id="btnBackFromQuest">⬅ Back</button>
+                <div class="quest-badges">
+                    <span class="badge-pill" id="questSubjectLabel">Math</span>
+                    <span class="badge-pill warn" id="questLevelLabel">Level 1</span>
+                </div>
+                <button class="btn-secondary btn-small" id="btnSwapStyle">🔄 Swap Game Style</button>
+            </div>
+            <div id="questArena" class="quest-box"></div>
+        </section>
+
+        <!-- TAB 3: RAINBOW XYLOPHONE STUDIO -->
+        <section id="tab-xylophone" class="tab-panel hidden">
+            <div class="card-panel">
+                <h2>🎹 Rainbow Xylophone Studio</h2>
+                <p class="muted">Tap keys or press 1–8 on your keyboard to compose tunes!</p>
+                <div class="xylo-presets">
+                    <button class="btn-outline btn-small" data-song="twinkle">⭐ Twinkle</button>
+                    <button class="btn-outline btn-small" data-song="abc">🔤 ABC Song</button>
+                    <button class="btn-outline btn-small" data-song="lamb">🐑 Mary's Lamb</button>
+                    <button class="btn-outline btn-small" id="btnClearXylo">Clear</button>
+                </div>
+                <div class="xylo-keys" id="xyloKeys"></div>
+                <p class="composition-readout" id="xyloReadout">My Composition: Tap keys or press 1–8...</p>
+            </div>
+        </section>
+
+        <!-- TAB 4: KID DJ BEAT MACHINE -->
+        <section id="tab-dj" class="tab-panel hidden">
+            <div class="card-panel">
+                <div class="section-head">
+                    <div>
+                        <h2>🎛️ Kid DJ Beat Machine</h2>
+                        <p class="muted">Tap bouncy drum & synth pads to build grooves.</p>
+                    </div>
+                    <button class="btn-primary btn-small" id="btnToggleGroove">🔁 Start Backing Groove</button>
+                </div>
+                <div class="dj-pads" id="djPads"></div>
+            </div>
+        </section>
+
+        <!-- TAB 5: JUKEBOX -->
+        <section id="tab-jukebox" class="tab-panel hidden">
+            <div class="card-panel">
+                <h2>🎶 Melody Minds Sing-Along Jukebox</h2>
+                <div class="song-list" id="jukeboxList"></div>
+                <div class="lyric-stage" id="lyricStage">Pick a song above to sing along!</div>
+            </div>
+        </section>
+
+        <!-- TAB 6: DRESS-UP WARDROBE -->
+        <section id="tab-wardrobe" class="tab-panel hidden">
+            <div class="card-panel">
+                <h2>👑 Dress-Up Wardrobe</h2>
+                <p class="muted">Spend earned stars on fun accessories for your explorer!</p>
+                <div class="wardrobe-grid" id="wardrobeGrid"></div>
             </div>
         </section>
 
     </main>
 
-    <!-- Goal Setting Modal -->
-    <div class="modal-overlay hidden" id="goalModal">
+    <!-- GOAL MODAL -->
+    <div class="modal-backdrop hidden" id="goalModal">
         <div class="modal-card">
-            <h3>🎯 Set Your Daily Tempo Goal</h3>
-            <p>Even after you hit your goal, Bop will keep unlocking bonus levels so you never stop growing!</p>
-            <div class="goal-options">
-                <button class="goal-choice" data-goal="2">2 Games (Warm-up)</button>
-                <button class="goal-choice active" data-goal="3">3 Games (Rockstar)</button>
-                <button class="goal-choice" data-goal="5">5 Games (Super Maestro)</button>
+            <h3>🎯 Daily Learning Goal</h3>
+            <p class="muted">Hitting your goal celebrates your streak—and unlocks bonus stretch tiers so growth never stops.</p>
+            <div class="choice-col">
+                <button class="choice-btn" data-goal="2">2 Mini-Games (Warm-Up)</button>
+                <button class="choice-btn active" data-goal="3">3 Mini-Games (Rockstar)</button>
+                <button class="choice-btn" data-goal="5">5 Mini-Games (Super Maestro)</button>
             </div>
-            <button class="btn-primary" id="btnCloseGoal">Save Goal</button>
+            <button class="btn-primary" id="btnSaveGoal">Save Goal</button>
+        </div>
+    </div>
+
+    <!-- EXPLORER SWITCH / CREATE MODAL -->
+    <div class="modal-backdrop hidden" id="explorerModal">
+        <div class="modal-card">
+            <h3>🦁 Switch or Create Explorer</h3>
+            <div class="explorer-list" id="explorerList"></div>
+            <form id="createExplorerForm" class="inline-form">
+                <input type="text" id="newExplorerName" placeholder="Explorer name..." maxlength="15" required>
+                <select id="newExplorerAge">
+                    <option value="4-6">Ages 4–6</option>
+                    <option value="7-9" selected>Ages 7–9</option>
+                    <option value="10-12">Ages 10–12</option>
+                </select>
+                <button type="submit" class="btn-primary btn-small">Create + Soundcheck</button>
+            </form>
+            <button class="btn-outline btn-small" id="btnCloseExplorerModal" style="margin-top:12px;">Close</button>
+        </div>
+    </div>
+
+    <!-- PARENT HUB MODAL -->
+    <div class="modal-backdrop hidden" id="parentModal">
+        <div class="modal-card">
+            <h3>👨‍👩‍👧 Parent & Educator Overview</h3>
+            <div id="parentStatsBody" class="parent-stats"></div>
+            <button class="btn-primary btn-small" id="btnCloseParentModal">Done</button>
+        </div>
+    </div>
+
+    <!-- TOOL / MINI-GAME MODAL -->
+    <div class="modal-backdrop hidden" id="toolModal">
+        <div class="modal-card wide">
+            <div class="modal-head">
+                <h3 id="toolModalTitle">Mini-Game</h3>
+                <button class="btn-outline btn-small" id="btnCloseToolModal">✕</button>
+            </div>
+            <div id="toolModalBody"></div>
         </div>
     </div>
 
