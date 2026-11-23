@@ -32,6 +32,7 @@
         <div class="user-controls" id="userControls">
             <div class="stat-pill">🔥 <span id="streakCount">4d</span></div>
             <div class="stat-pill">⭐ <span id="starCount">65</span></div>
+            <div class="stat-pill" id="cloudStatus">☁️ Local</div>
             <button class="btn-secondary btn-small" id="btnGoalModal">🎯 Goal</button>
             <button class="btn-outline btn-small" id="btnExplorerModal">🦁 <span id="activeExplorerName">Leo</span></button>
             <button class="btn-outline btn-small" id="btnParentModal">👨‍👩‍👧</button>
@@ -50,7 +51,7 @@
 
     <main class="main-stage">
 
-        <!-- PLACEMENT SOUNDCHECK OVERLAY / VIEW -->
+        <!-- PLACEMENT SOUNDCHECK VIEW -->
         <section id="viewPlacement" class="card-panel hidden">
             <span class="badge-pill">🎧 Quick Soundcheck</span>
             <h2 id="placementTitle">Let's Tune Your Starting Level!</h2>
@@ -58,7 +59,7 @@
             <div id="placementBox" class="quest-box"></div>
         </section>
 
-        <!-- TAB 1: CLASSROOM (ABC Keys + Quick Subjects + Goal Banner + Mini-Games) -->
+        <!-- TAB 1: CLASSROOM -->
         <section id="tab-classroom" class="tab-panel active">
             <div class="goal-banner">
                 <div>
@@ -227,6 +228,8 @@
         </div>
     </div>
 
+    <!-- Supabase JS v2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
 </html>
