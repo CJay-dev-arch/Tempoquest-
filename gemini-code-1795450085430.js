@@ -1,5 +1,5 @@
 /* =========================================
-   1. WEB AUDIO SYNTHESIZER (No external MP3s needed)
+   1. WEB AUDIO SYNTHESIZER
    ========================================= */
 const AudioEngine = {
     ctx: null,
@@ -8,467 +8,683 @@ const AudioEngine = {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         }
     },
-    playNote(freq = 440, duration = 0.25, type = 'triangle') {
+    tone(freq = 440, dur = 0.22, type = 'triangle') {
         this.init();
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        
-        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-
+        gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + duration);
+        osc.stop(this.ctx.currentTime + dur);
     },
-    playSuccess() {
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-        notes.forEach((n, i) => setTimeout(() => this.playNote(n, 0.2, 'sine'), i * 90));
+    win() {
+        [523.25, 659.25, 783.99, 1046.5].forEach((n, i) => {
+            setTimeout(() => this.tone(n, 0.18, 'sine'), i * 85);
+        });
     },
-    playOops() {
-        this.playNote(220, 0.3, 'sawtooth');
-        setTimeout(() => this.playNote(196, 0.35, 'sawtooth'), 150);
+    tryAgain() {
+        this.tone(233.08, 0.22, 'sawtooth');
     }
 };
 
 /* =========================================
-   2. CURRICULUM & SUBJECTS DATA (All 12 Topics)
+   2. ALL 12 SUBJECTS, SONGS & ITEMS
    ========================================= */
 const SUBJECTS = [
-    { id: 'math', name: 'Math', icon: '➕', category: 'stem', color: '#FF7675', desc: 'Rhythm equations & beat fractions' },
-    { id: 'counting', name: 'Counting', icon: '🔢', category: 'stem', color: '#FD79A8', desc: 'Count drumbeats & tempo steps' },
-    { id: 'science', name: 'Science', icon: '🧪', category: 'stem', color: '#00B894', desc: 'Sound waves, nature & space jams' },
-    { id: 'stem', name: 'STEM', icon: '🚀', category: 'stem', color: '#0984E3', desc: 'Coding loops & musical machines' },
-    { id: 'reading', name: 'Reading', icon: '📖', category: 'literacy', color: '#6C5CE7', desc: 'Sing-along stories & lyric clues' },
-    { id: 'writing', name: 'Writing', icon: '✍️', category: 'literacy', color: '#A29BFE', desc: 'Songwriting & sentence builders' },
-    { id: 'spelling', name: 'Spelling', icon: '🔤', category: 'literacy', color: '#00CEC9', desc: 'Tap the syllable beats to spell' },
-    { id: 'music', name: 'Music', icon: '🎹', category: 'arts', color: '#FDCB6E', desc: 'Melody memory, pitch & rhythm' },
-    { id: 'culture', name: 'Culture', icon: '🌍', category: 'arts', color: '#E17055', desc: 'World instruments & global rhythms' },
-    { id: 'manners', name: 'Manners', icon: '🤝', category: 'sel', color: '#55EFC4', desc: 'Kindness choruses & polite choices' },
-    { id: 'emotions', name: 'Emotions', icon: '💛', category: 'sel', color: '#FAB1A0', desc: 'Major & minor mood melodies' },
-    { id: 'selfawareness', name: 'Self Awareness', icon: '🧘', category: 'sel', color: '#81ECEC', desc: 'Mindful breathing & focus beats' }
+    { id: 'math', name: 'Math', icon: '➕', stage: 'k', desc: 'Beat addition & pattern math' },
+    { id: 'counting', name: 'Counting', icon: '🔢', stage: 'prek', desc: 'Steady drum counting & steps' },
+    { id: 'science', name: 'Science', icon: '🔬', stage: 'g2', desc: 'Sound waves, space & nature' },
+    { id: 'stem', name: 'STEM', icon: '🤖', stage: 'g2', desc: 'Rhythm loops & coding logic' },
+    { id: 'reading', name: 'Reading', icon: '📖', stage: 'prek', desc: 'Phonics rhymes & lyric clues' },
+    { id: 'writing', name: 'Writing', icon: '✍️', stage: 'k', desc: 'Sentence melody & song lines' },
+    { id: 'spelling', name: 'Spelling', icon: '🔤', stage: 'k', desc: 'Syllable beats & letter tiles' },
+    { id: 'music', name: 'Music', icon: '🎹', stage: 'prek', desc: 'Pitch, scales & chord grooves' },
+    { id: 'culture', name: 'Culture', icon: '🌍', stage: 'g2', desc: 'World drums & global songs' },
+    { id: 'manners', name: 'Manners', icon: '🤝', stage: 'prek', desc: 'Kindness choruses & sharing' },
+    { id: 'emotions', name: 'Emotions', icon: '💛', stage: 'k', desc: 'Happy & calm musical moods' },
+    { id: 'selfawareness', name: 'Self Awareness', icon: '🧘', stage: 'g2', desc: 'Mindful breaths & focus beats' }
 ];
 
-// Interchangeable Mini-Game Mechanics
-const GAME_MECHANICS = [
-    { id: 'melody-match', name: 'Melody Match Pads' },
-    { id: 'rhythm-builder', name: 'Lyric & Beat Sequencer' }
-];
-
-// Adaptive Question Bank per Subject & Level
-const QUESTION_BANK = {
+const QUEST_BANK = {
     math: [
-        { q: "Play the pad that equals: 2 beats + 3 beats!", options: ["4", "5", "6", "3"], ans: 1, hint: "Count 2 claps, then 3 more!" },
-        { q: "A measure has 8 beats. We played 3. How many left?", options: ["5", "4", "6", "3"], ans: 0, hint: "8 minus 3 equals..." },
-        { q: "Multiply the tempo: 3 groups of 4 beats!", options: ["7", "10", "12", "16"], ans: 2, hint: "4 + 4 + 4!" }
+        { q: "3 beats + 2 beats makes how many beats?", opts: ["4", "5", "6", "2"], ans: 1, hint: "Count 3 taps and add 2 more." },
+        { q: "Two bars of 4 beats equal...", opts: ["6", "8", "10", "12"], ans: 1, hint: "4 + 4!" }
     ],
     counting: [
-        { q: "Listen to Bop's drum! How many notes did you hear?", playCount: 4, options: ["2", "4", "5", "3"], ans: 1, hint: "Count along with each beep!" },
-        { q: "Which number comes right after 19 in our countdown?", options: ["18", "21", "20", "29"], ans: 2, hint: "18, 19, ...!" }
-    ],
-    spelling: [
-        { q: "Tap the missing letters to complete the musical word: R H _ T H M", options: ["Y", "I", "E", "A"], ans: 0, hint: "It sounds like 'ri-thum'!" },
-        { q: "Spell the word for a happy song tune: M E L _ D Y", options: ["A", "O", "U", "I"], ans: 1, hint: "Mel-O-dy!" }
-    ],
-    emotions: [
-        { q: "A bright, fast major chord usually sounds...", options: ["Sleepy", "Happy & Excited", "Grumpy", "Scared"], ans: 1, hint: "Listen to the sunny sound!" },
-        { q: "If a friend feels left out of the band, what is the best move?", options: ["Ignore them", "Invite them to play an instrument", "Laugh", "Walk away"], ans: 1, hint: "Music is better together!" }
-    ],
-    manners: [
-        { q: "Someone shares their headphones with you. What lyric fits best?", options: ["Give me that!", "Thank you so much!", "Whatever", "Mine now"], ans: 1, hint: "Gratitude makes great harmony!" }
-    ],
-    selfawareness: [
-        { q: "Before a big solo, your heart beats fast. How do you steady your tempo?", options: ["Take 3 slow deep breaths", "Yell loudly", "Run away", "Give up"], ans: 0, hint: "Slow breaths slow down your heart rhythm!" }
+        { q: "Which number comes right after 7 in our count-up?", opts: ["6", "8", "9", "10"], ans: 1, hint: "5, 6, 7, ...!" }
     ],
     science: [
-        { q: "How does sound travel to your ears?", options: ["Invisible vibrations (waves)", "Magic dust", "Light beams", "Gravity"], ans: 0, hint: "Feel your throat hum when you sing!" }
+        { q: "What makes the sound waves you hear?", opts: ["Vibrations", "Shadows", "Magnets", "Clouds"], ans: 0, hint: "Strings and drums vibrate!" }
     ],
     stem: [
-        { q: "In coding, repeating a drumbeat 4 times is called a...", options: ["Bug", "Loop", "Glitch", "Screen"], ans: 1, hint: "It goes around and around!" }
+        { q: "Repeating a beat pattern 4 times is a...", opts: ["Loop", "Eraser", "Pause", "Folder"], ans: 0, hint: "In code, it loops around!" }
     ],
     reading: [
-        { q: "'The purple cat played a jazzy saxophone.' What instrument did the cat play?", options: ["Drums", "Saxophone", "Guitar", "Flute"], ans: 1, hint: "Read the last word of the lyric!" }
+        { q: "Which word rhymes with 'CAT' in our verse?", opts: ["Hat", "Drum", "Star", "Jump"], ans: 0, hint: "Listen to the ending sound: -at." }
     ],
     writing: [
-        { q: "Which sentence has the right punctuation to end an exciting song?", options: ["We won the concert!", "We won the concert,", "we won the concert", "We won? the concert"], ans: 0, hint: "Exciting sentences end with an exclamation mark!" }
+        { q: "How should an excited song line end?", opts: ["!", ",", "?", "nothing"], ans: 0, hint: "Exclamation mark brings the energy!" }
+    ],
+    spelling: [
+        { q: "Complete the musical word: B _ A T", opts: ["E", "O", "U", "I"], ans: 0, hint: "B - E - A - T!" }
     ],
     music: [
-        { q: "Which note is higher in pitch?", options: ["Low Bass Drum", "High Bird Whistle", "They are the same", "Silence"], ans: 1, hint: "Think of a tiny bird singing high in a tree!" }
+        { q: "Which pitch sounds higher?", opts: ["Bird whistle", "Deep bass drum", "Quiet room", "Heavy thud"], ans: 0, hint: "High notes soar up!" }
     ],
     culture: [
-        { q: "The Djembe is a famous goblet-shaped drum originating from...", options: ["West Africa", "Antarctica", "Mars", "The Moon"], ans: 0, hint: "Played with bare hands in rich rhythmic traditions!" }
+        { q: "A djembe drum is most closely tied to...", opts: ["West Africa", "Antarctica", "Deep space", "Glaciers"], ans: 0, hint: "Hand-played goblet drum tradition." }
+    ],
+    manners: [
+        { q: "Someone passes you the tambourine. What do you say?", opts: ["Thank you!", "Give it now!", "No way", "Move"], ans: 0, hint: "Polite words keep the band happy." }
+    ],
+    emotions: [
+        { q: "A bouncy, upbeat melody usually feels...", opts: ["Cheerful", "Sleepy", "Angry", "Scary"], ans: 0, hint: "Upbeat rhythm = upbeat mood!" }
+    ],
+    selfawareness: [
+        { q: "Feeling wiggly before a turn? Try...", opts: ["3 slow breaths", "Shouting", "Hiding", "Quitting"], ans: 0, hint: "Slow breathing steadies your rhythm." }
     ]
 };
 
+const SONGS = [
+    { id: 'abc', title: 'The ABC Groove', lyric: 'A-B-C-D sing with me, E-F-G clap to the beat!' },
+    { id: 'calm', title: 'Balloon Breath Jam', lyric: 'Breathe in slow like a giant balloon, breathe out smooth like a gentle tune.' },
+    { id: 'yet', title: 'The Magic Word YET', lyric: 'I cannot play that chord... YET! Keep practicing and you will get!' }
+];
+
+const WARDROBE_ITEMS = [
+    { id: 'hat', name: 'Star Cap', icon: '🧢', cost: 10 },
+    { id: 'crown', name: 'Beat Crown', icon: '👑', cost: 25 },
+    { id: 'glasses', name: 'Cool Shades', icon: '🕶️', cost: 15 },
+    { id: 'mic', name: 'Pop Mic', icon: '🎤', cost: 20 }
+];
+
 /* =========================================
-   3. STATE MANAGEMENT & LOCAL STORAGE
+   3. STATE & STORAGE
    ========================================= */
-let state = {
-    profiles: JSON.parse(localStorage.getItem('tq_profiles')) || [
-        { id: 'demo1', name: 'Maya', age: '7-9', avatar: '🦄', stars: 12, streak: 3, dailyGoal: 3, completedToday: 1, mastery: {} }
+const STORAGE_KEY = 'melody_minds_unified_v1';
+
+function defaultMastery(level = 1) {
+    const map = {};
+    SUBJECTS.forEach(s => { map[s.id] = { level, xp: 0 }; });
+    return map;
+}
+
+let appState = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+    activeId: 'leo',
+    profiles: [
+        {
+            id: 'leo',
+            name: 'Leo',
+            age: '7-9',
+            avatar: '🦁',
+            stars: 65,
+            streak: 4,
+            dailyGoal: 3,
+            completedToday: 1,
+            tested: true,
+            unlockedWardrobe: ['hat'],
+            mastery: defaultMastery(1)
+        }
     ],
-    currentUser: null,
-    activeSubject: null,
-    activeMechanicIndex: 0,
+    questSubjectId: 'math',
+    questStyle: 'pads', // 'pads' | 'sequencer'
     placementStep: 0,
     placementScore: 0
 };
 
-function saveState() {
-    localStorage.setItem('tq_profiles', JSON.stringify(state.profiles));
+function saveApp() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
 }
 
-function updateMascot(text, playTone = true) {
-    const speech = document.getElementById('mascotSpeech');
-    speech.innerHTML = text;
-    if (playTone) AudioEngine.playNote(587.33, 0.12, 'sine');
+function currentExplorer() {
+    return appState.profiles.find(p => p.id === appState.activeId) || appState.profiles[0];
+}
+
+function sayMascot(html) {
+    document.getElementById('mascotSpeech').innerHTML = html;
 }
 
 /* =========================================
-   4. VIEW ROUTING & PROFILE SYSTEM
+   4. NAVIGATION & HEADER
    ========================================= */
-function showView(viewId) {
-    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-    document.getElementById(viewId).classList.remove('hidden');
-}
+function switchTab(tabName) {
+    document.getElementById('viewPlacement').classList.add('hidden');
+    document.getElementById('viewQuest').classList.add('hidden');
+    document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
-function renderProfiles() {
-    const grid = document.getElementById('profileGrid');
-    grid.innerHTML = '';
-    state.profiles.forEach(profile => {
-        const card = document.createElement('div');
-        card.className = 'profile-card';
-        card.innerHTML = `
-            <div class="profile-avatar-emoji">${profile.avatar}</div>
-            <h3>${profile.name}</h3>
-            <small>Ages ${profile.age} • ⭐ ${profile.stars}</small>
-        `;
-        card.onclick = () => loginUser(profile.id);
-        grid.appendChild(card);
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
     });
 }
 
-document.getElementById('newProfileForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('playerNameInput').value.trim();
-    const age = document.getElementById('ageGroupSelect').value;
-    if (!name) return;
-
-    const avatars = ['🦊', '🚀', '🐼', '🎸', '🦖', '🐬'];
-    const newProfile = {
-        id: 'user_' + Date.now(),
-        name,
-        age,
-        avatar: avatars[Math.floor(Math.random() * avatars.length)],
-        stars: 0,
-        streak: 1,
-        dailyGoal: 3,
-        completedToday: 0,
-        mastery: {}, // stores level & xp per subject
-        tested: false
-    };
-
-    SUBJECTS.forEach(s => newProfile.mastery[s.id] = { level: 1, xp: 0 });
-    state.profiles.push(newProfile);
-    saveState();
-    document.getElementById('playerNameInput').value = '';
-    loginUser(newProfile.id);
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => switchTab(btn.dataset.tab);
 });
+document.getElementById('brandHome').onclick = () => switchTab('classroom');
 
-function loginUser(id) {
-    state.currentUser = state.profiles.find(p => p.id === id);
-    // Ensure mastery object exists for older demo profiles
-    SUBJECTS.forEach(s => {
-        if (!state.currentUser.mastery[s.id]) {
-            state.currentUser.mastery[s.id] = { level: 1, xp: 0 };
-        }
-    });
+function refreshHUD() {
+    const u = currentExplorer();
+    document.getElementById('streakCount').textContent = `${u.streak}d`;
+    document.getElementById('starCount').textContent = u.stars;
+    document.getElementById('activeExplorerName').textContent = u.name;
 
-    document.getElementById('userControls').classList.remove('hidden');
-    updateHeaderStats();
+    const pct = Math.min(100, Math.round((u.completedToday / u.dailyGoal) * 100));
+    document.getElementById('goalProgressBar').style.width = `${pct}%`;
+    document.getElementById('goalBannerTitle').textContent =
+        `Today's Learning Jam: ${u.completedToday} / ${u.dailyGoal} Mini-Games`;
 
-    if (!state.currentUser.tested) {
-        startPlacementTest();
+    const encoreBtn = document.getElementById('btnEncoreBoost');
+    const subText = document.getElementById('goalBannerSub');
+    if (u.completedToday >= u.dailyGoal) {
+        subText.textContent = '🎉 Goal Reached! Encore Mode active — keep leveling up past your goal!';
+        encoreBtn.classList.remove('hidden');
     } else {
-        loadDashboard();
+        subText.textContent = 'Every quest grows your mastery. Hit your goal to unlock Encore Boosts!';
+        encoreBtn.classList.add('hidden');
     }
 }
 
-document.getElementById('btnLogout').onclick = () => {
-    state.currentUser = null;
-    document.getElementById('userControls').classList.add('hidden');
-    renderProfiles();
-    showView('viewLogin');
-    updateMascot("See you soon! Who wants to play next?");
+document.getElementById('btnEncoreBoost').onclick = () => {
+    const u = currentExplorer();
+    u.dailyGoal += 2;
+    u.stars += 10;
+    saveApp();
+    refreshHUD();
+    AudioEngine.win();
+    sayMascot(`Encore unlocked! +10 ⭐ bonus and a new stretch goal of <strong>${u.dailyGoal}</strong>!`);
 };
 
-function updateHeaderStats() {
-    if (!state.currentUser) return;
-    document.getElementById('starCount').textContent = state.currentUser.stars;
-    document.getElementById('streakCount').textContent = state.currentUser.streak;
-}
-
 /* =========================================
-   5. ADAPTIVE PLACEMENT TEST
+   5. PLACEMENT SOUNDCHECK & PROFILES
    ========================================= */
-const PLACEMENT_QUESTIONS = [
-    { q: "1. Rhythm Check: If you clap 2 times, then 2 more times, how many claps?", opts: ["3 Claps", "4 Claps", "5 Claps"], ans: 1 },
-    { q: "2. Word Beat: Which word rhymes with 'SONG'?", opts: ["Strong", "Star", "Beat"], ans: 0 },
-    { q: "3. Emotion Check: How do you feel when you learn a cool new skill?", opts: ["Proud & Happy!", "Bored", "Sleepy"], ans: 0 }
+const PLACEMENT_STEPS = [
+    { q: "1. Rhythm Check: Clap 2 times, then 1 more time. Total claps?", opts: ["2", "3", "4"], ans: 1 },
+    { q: "2. Rhyme Check: Which word rhymes with 'SING'?", opts: ["Ring", "Drum", "Book"], ans: 0 },
+    { q: "3. Feeling Check: How do you feel trying a new skill?", opts: ["Curious!", "Scared to try", "Done forever"], ans: 0 }
 ];
 
-function startPlacementTest() {
-    state.placementStep = 0;
-    state.placementScore = 0;
-    showView('viewPlacement');
-    updateMascot(`Welcome, <strong>${state.currentUser.name}</strong>! Let's do a 3-question soundcheck to tune your starting level!`);
-    renderPlacementQuestion();
+function startPlacement() {
+    appState.placementStep = 0;
+    appState.placementScore = 0;
+    document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+    document.getElementById('viewQuest').classList.add('hidden');
+    document.getElementById('viewPlacement').classList.remove('hidden');
+    renderPlacementStep();
 }
 
-function renderPlacementQuestion() {
-    const qObj = PLACEMENT_QUESTIONS[state.placementStep];
-    const box = document.getElementById('placementQuizBox');
+function renderPlacementStep() {
+    const item = PLACEMENT_STEPS[appState.placementStep];
+    const box = document.getElementById('placementBox');
     box.innerHTML = `
-        <h3 style="margin: 20px 0;">${qObj.q}</h3>
-        <div class="beat-pads">
-            ${qObj.opts.map((opt, idx) => `
-                <button class="pad-btn pad-${idx}" onclick="answerPlacement(${idx})">${opt}</button>
+        <h3>${item.q}</h3>
+        <div class="option-grid">
+            ${item.opts.map((opt, idx) => `
+                <button class="pad-option pad-${idx}" onclick="pickPlacement(${idx})">${opt}</button>
             `).join('')}
         </div>
     `;
 }
 
-window.answerPlacement = function(idx) {
-    const qObj = PLACEMENT_QUESTIONS[state.placementStep];
-    if (idx === qObj.ans) {
-        state.placementScore++;
-        AudioEngine.playSuccess();
+window.pickPlacement = function(idx) {
+    const item = PLACEMENT_STEPS[appState.placementStep];
+    if (idx === item.ans) {
+        appState.placementScore++;
+        AudioEngine.tone(659.25, 0.18, 'sine');
     } else {
-        AudioEngine.playNote(330, 0.2);
+        AudioEngine.tone(330, 0.18, 'triangle');
     }
-
-    state.placementStep++;
-    if (state.placementStep < PLACEMENT_QUESTIONS.length) {
-        renderPlacementQuestion();
+    appState.placementStep++;
+    if (appState.placementStep < PLACEMENT_STEPS.length) {
+        renderPlacementStep();
     } else {
-        // Set starting level based on placement score
-        const startLevel = state.placementScore >= 2 ? 2 : 1;
-        SUBJECTS.forEach(s => state.currentUser.mastery[s.id].level = startLevel);
-        state.currentUser.tested = true;
-        saveState();
-        updateMascot(`Awesome soundcheck! I tuned your worlds to <strong>Level ${startLevel}</strong>. Pick any subject to begin!`);
-        loadDashboard();
+        const u = currentExplorer();
+        const startLvl = appState.placementScore >= 2 ? 2 : 1;
+        u.mastery = defaultMastery(startLvl);
+        u.tested = true;
+        saveApp();
+        renderSubjectsGrid();
+        switchTab('classroom');
+        sayMascot(`Soundcheck complete, <strong>${u.name}</strong>! Subjects tuned to <strong>Level ${startLvl}</strong>!`);
     }
 };
 
 /* =========================================
-   6. PERSONALIZED DASHBOARD & CONTINUOUS GOALS
+   6. CLASSROOM ABC, SUBJECTS & QUEST STAGE
    ========================================= */
-function loadDashboard(filter = 'all') {
-    showView('viewDashboard');
-    updateGoalBanner();
+function renderABC() {
+    const grid = document.getElementById('abcGrid');
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    grid.innerHTML = '';
+    letters.forEach((ch, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'abc-key';
+        btn.textContent = ch;
+        btn.onclick = () => {
+            const freq = 261.63 * Math.pow(2, (idx % 12) / 12);
+            AudioEngine.tone(freq, 0.22, 'sine');
+            sayMascot(`<strong>${ch}</strong> says "${ch.toLowerCase()}" — sing it out!`);
+        };
+        grid.appendChild(btn);
+    });
+}
 
-    const grid = document.getElementById('subjectsGrid');
+function renderQuickSubjects() {
+    const box = document.getElementById('quickSubjectsList');
+    box.innerHTML = '';
+    SUBJECTS.slice(0, 6).forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'tile-btn';
+        btn.innerHTML = `<strong>${s.icon} ${s.name}</strong><span>${s.desc}</span>`;
+        btn.onclick = () => openQuest(s.id);
+        box.appendChild(btn);
+    });
+}
+
+function renderSubjectsGrid(stageFilter = 'all') {
+    const u = currentExplorer();
+    const grid = document.getElementById('allSubjectsGrid');
     grid.innerHTML = '';
 
-    const filtered = filter === 'all' ? SUBJECTS : SUBJECTS.filter(s => s.category === filter);
-
-    filtered.forEach(subj => {
-        const m = state.currentUser.mastery[subj.id];
+    const list = stageFilter === 'all' ? SUBJECTS : SUBJECTS.filter(s => s.stage === stageFilter);
+    list.forEach(s => {
+        const m = u.mastery[s.id] || { level: 1, xp: 0 };
         const card = document.createElement('div');
         card.className = 'subject-card';
-        card.style.borderBottomColor = subj.color;
         card.innerHTML = `
             <div>
-                <div class="subject-top">
-                    <span class="subject-icon">${subj.icon}</span>
-                    <span class="mastery-pill">Level ${m.level}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:1.7rem;">${s.icon}</span>
+                    <span class="badge-pill">Lvl ${m.level}</span>
                 </div>
-                <h3>${subj.name}</h3>
-                <p>${subj.desc}</p>
+                <h3 style="margin-top:8px;">${s.name}</h3>
+                <p class="muted" style="font-size:0.85rem;">${s.desc}</p>
             </div>
             <div>
-                <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
-                    <span>Evolution Progress</span>
-                    <span>${m.xp}%</span>
-                </div>
-                <div class="mini-bar">
-                    <div class="mini-bar-fill" style="width: ${m.xp}%;"></div>
-                </div>
+                <small style="font-weight:800;">Mastery XP: ${m.xp}%</small>
+                <div class="mini-bar"><div class="mini-bar-fill" style="width:${m.xp}%;"></div></div>
             </div>
         `;
-        card.onclick = () => launchMiniGame(subj.id);
+        card.onclick = () => openQuest(s.id);
         grid.appendChild(card);
     });
 }
 
-function updateGoalBanner() {
-    const u = state.currentUser;
-    const pct = Math.min(100, Math.round((u.completedToday / u.dailyGoal) * 100));
-    document.getElementById('goalProgressText').textContent = `${u.completedToday} / ${u.dailyGoal} Mini-Games`;
-    document.getElementById('goalProgressBar').style.width = `${pct}%`;
-
-    const nextTierBtn = document.getElementById('btnNextTier');
-    const statusText = document.getElementById('evolutionStatus');
-
-    if (u.completedToday >= u.dailyGoal) {
-        statusText.textContent = "🎉 Daily Goal Crushed! Bonus Encore Mode active — keep evolving!";
-        nextTierBtn.classList.remove('hidden');
-    } else {
-        statusText.textContent = "Every song boosts your mastery. Hit your goal to unlock Encore Boosts!";
-        nextTierBtn.classList.add('hidden');
-    }
-}
-
-document.getElementById('btnNextTier').onclick = () => {
-    state.currentUser.dailyGoal += 2;
-    saveState();
-    updateGoalBanner();
-    AudioEngine.playSuccess();
-    updateMascot("Woohoo! Stretch goal unlocked! There is always more cool stuff to master!");
-};
-
-// Filter pills
-document.querySelectorAll('.filter-pill').forEach(pill => {
+document.querySelectorAll('#stagePills .filter-pill').forEach(pill => {
     pill.onclick = () => {
-        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('#stagePills .filter-pill').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
-        loadDashboard(pill.dataset.filter);
+        renderSubjectsGrid(pill.dataset.stage);
     };
 });
 
-/* =========================================
-   7. INTERCHANGEABLE MUSIC MINI-GAME ENGINE
-   ========================================= */
-function launchMiniGame(subjectId) {
-    state.activeSubject = SUBJECTS.find(s => s.id === subjectId);
-    const m = state.currentUser.mastery[subjectId];
+function openQuest(subjectId) {
+    appState.questSubjectId = subjectId;
+    const subj = SUBJECTS.find(s => s.id === subjectId);
+    const u = currentExplorer();
+    const m = u.mastery[subjectId] || { level: 1, xp: 0 };
 
-    showView('viewGame');
-    document.getElementById('activeSubjectBadge').textContent = `${state.activeSubject.icon} ${state.activeSubject.name}`;
-    document.getElementById('activeLevelBadge').textContent = `Level ${m.level}`;
+    document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+    document.getElementById('viewPlacement').classList.add('hidden');
+    document.getElementById('viewQuest').classList.remove('hidden');
 
-    renderGameStage();
+    document.getElementById('questSubjectLabel').textContent = `${subj.icon} ${subj.name}`;
+    document.getElementById('questLevelLabel').textContent = `Level ${m.level}`;
+    renderQuestArena();
 }
 
-document.getElementById('btnSwitchMechanic').onclick = () => {
-    state.activeMechanicIndex = (state.activeMechanicIndex + 1) % GAME_MECHANICS.length;
-    AudioEngine.playNote(659.25, 0.15);
-    renderGameStage();
+document.getElementById('btnBackFromQuest').onclick = () => switchTab('map');
+
+document.getElementById('btnSwapStyle').onclick = () => {
+    appState.questStyle = appState.questStyle === 'pads' ? 'sequencer' : 'pads';
+    AudioEngine.tone(587.33, 0.15, 'triangle');
+    renderQuestArena();
 };
 
-document.getElementById('btnBackToHub').onclick = () => {
-    loadDashboard();
-    updateMascot("Pick another world whenever you're ready!");
-};
+function renderQuestArena() {
+    const subj = SUBJECTS.find(s => s.id === appState.questSubjectId);
+    const u = currentExplorer();
+    const m = u.mastery[subj.id];
+    const pool = QUEST_BANK[subj.id] || QUEST_BANK.math;
+    const item = pool[(m.level - 1) % pool.length];
+    const arena = document.getElementById('questArena');
+    const freqs = [261.63, 329.63, 392.0, 523.25];
 
-function renderGameStage() {
-    const subj = state.activeSubject;
-    const m = state.currentUser.mastery[subj.id];
-    const mechanic = GAME_MECHANICS[state.activeMechanicIndex];
-
-    // Pick question matching level (loops seamlessly for continuous evolution)
-    const pool = QUESTION_BANK[subj.id] || QUESTION_BANK.math;
-    const qData = pool[(m.level - 1) % pool.length];
-
-    updateMascot(`Playing <strong>${mechanic.name}</strong> for ${subj.name}! Need a clue? Click me!`);
-    document.getElementById('mascotAvatar').onclick = () => updateMascot(`💡 Hint: ${qData.hint}`);
-
-    const arena = document.getElementById('gameArena');
-    const freqs = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
-
-    if (mechanic.id === 'melody-match') {
-        arena.innerHTML = `
-            <span class="badge-tag">🎹 Mode: Melody Match Pads</span>
-            <h2 style="margin: 18px 0;">${qData.q}</h2>
-            ${qData.playCount ? `<button class="btn-secondary" onclick="playBeatSequence(${qData.playCount})">🔊 Hear Bop's Drum (${qData.playCount} beats)</button>` : ''}
-            <div class="beat-pads">
-                ${qData.options.map((opt, idx) => `
-                    <button class="pad-btn pad-${idx}" onclick="submitAnswer(${idx}, ${qData.ans}, ${freqs[idx]})">
-                        🎵 ${opt}
-                    </button>
-                `).join('')}
-            </div>
-        `;
-        if (qData.playCount) setTimeout(() => playBeatSequence(qData.playCount), 400);
-    } else {
-        // Interchangeable Mechanic #2: Rhythm Sequencer Cards
-        arena.innerHTML = `
-            <span class="badge-tag">🥁 Mode: Rhythm Track Builder</span>
-            <h2 style="margin: 18px 0;">Drop the right beat tile onto the track!</h2>
-            <p style="font-size:1.15rem; margin-bottom:20px;"><strong>${qData.q}</strong></p>
-            <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
-                ${qData.options.map((opt, idx) => `
-                    <button class="btn-outline" style="border-width:3px; font-size:1.1rem; padding:18px 26px;" 
-                        onclick="submitAnswer(${idx}, ${qData.ans}, ${freqs[idx]})">
-                        💿 Track ${idx + 1}: ${opt}
-                    </button>
-                `).join('')}
-            </div>
-        `;
-    }
+    const modeLabel = appState.questStyle === 'pads' ? '🎹 Melody Pads' : '🎛️ Beat Sequencer';
+    arena.innerHTML = `
+        <span class="badge-pill">${modeLabel}</span>
+        <h2 style="margin:14px 0;">${item.q}</h2>
+        <button class="btn-outline btn-small" onclick="sayMascot('💡 Hint: ${item.hint.replace(/'/g, '')}')">💡 Ask Hint</button>
+        <div class="option-grid">
+            ${item.opts.map((opt, i) => `
+                <button class="pad-option pad-${i}" onclick="submitQuestAnswer(${i}, ${item.ans}, ${freqs[i]})">
+                    ${appState.questStyle === 'pads' ? '🎵' : '🥁'} ${opt}
+                </button>
+            `).join('')}
+        </div>
+    `;
 }
 
-window.playBeatSequence = function(count) {
-    for (let i = 0; i < count; i++) {
-        setTimeout(() => AudioEngine.playNote(440, 0.15, 'square'), i * 350);
-    }
-};
+window.submitQuestAnswer = function(chosen, correct, freq) {
+    AudioEngine.tone(freq, 0.22, 'sine');
+    const u = currentExplorer();
+    const m = u.mastery[appState.questSubjectId];
 
-window.submitAnswer = function(chosenIdx, correctIdx, noteFreq) {
-    AudioEngine.playNote(noteFreq, 0.25);
-
-    if (chosenIdx === correctIdx) {
-        setTimeout(() => AudioEngine.playSuccess(), 200);
-        const u = state.currentUser;
-        const m = u.mastery[state.activeSubject.id];
-
-        // Continuous Evolution Logic: Never stops improving
-        u.stars += 5;
+    if (chosen === correct) {
+        setTimeout(() => AudioEngine.win(), 150);
+        u.stars += 10;
         u.completedToday += 1;
         m.xp += 50;
         if (m.xp >= 100) {
             m.level += 1;
             m.xp = 0;
         }
-
-        saveState();
-        updateHeaderStats();
-        updateMascot(`🎉 <strong>Harmony Achieved!</strong> You leveled up ${state.activeSubject.name} to <strong>Level ${m.level}</strong>! Ready for the next verse?`);
-
-        // Automatically advance to next challenge for continuous learning
-        setTimeout(() => {
-            document.getElementById('activeLevelBadge').textContent = `Level ${m.level}`;
-            renderGameStage();
-        }, 1400);
+        saveApp();
+        refreshHUD();
+        renderSubjectsGrid();
+        document.getElementById('questLevelLabel').textContent = `Level ${m.level}`;
+        sayMascot(`⭐ +10 Stars! ${currentExplorer().name} is now <strong>Level ${m.level}</strong>!`);
+        setTimeout(renderQuestArena, 900);
     } else {
-        setTimeout(() => AudioEngine.playOops(), 200);
-        updateMascot("Almost! That note was a little flat. Try another pad or click me for a hint!");
+        AudioEngine.tryAgain();
+        sayMascot('Not quite that note—try another tile or tap <strong>Ask Hint</strong>!');
     }
 };
 
 /* =========================================
-   8. GOAL MODAL CONTROLS
+   7. XYLOPHONE, DJ, JUKEBOX & WARDROBE
    ========================================= */
-const goalModal = document.getElementById('goalModal');
-document.getElementById('btnOpenGoal').onclick = () => goalModal.classList.remove('hidden');
-document.getElementById('btnCloseGoal').onclick = () => {
-    goalModal.classList.add('hidden');
-    updateGoalBanner();
+const NOTES = [
+    { label: 'C5', freq: 523.25, color: '#FF7675' },
+    { label: 'D5', freq: 587.33, color: '#FF9F43' },
+    { label: 'E5', freq: 659.25, color: '#FDCB6E' },
+    { label: 'F5', freq: 698.46, color: '#00B894' },
+    { label: 'G5', freq: 783.99, color: '#00CEC9' },
+    { label: 'A5', freq: 880.0,  color: '#0984E3' },
+    { label: 'B5', freq: 987.77, color: '#6C5CE7' },
+    { label: 'C6', freq: 1046.5, color: '#FD79A8' }
+];
+let composition = [];
+
+function renderXylophone() {
+    const container = document.getElementById('xyloKeys');
+    container.innerHTML = '';
+    NOTES.forEach((n, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'xylo-key';
+        btn.style.background = n.color;
+        btn.innerHTML = `<span>${idx + 1}</span><small>${n.label}</small>`;
+        btn.onclick = () => {
+            AudioEngine.tone(n.freq, 0.28, 'sine');
+            composition.push(n.label);
+            document.getElementById('xyloReadout').textContent =
+                `My Composition: ${composition.slice(-16).join(' · ')}`;
+        };
+        container.appendChild(btn);
+    });
+}
+
+window.addEventListener('keydown', e => {
+    const num = parseInt(e.key, 10);
+    if (num >= 1 && num <= 8) {
+        const n = NOTES[num - 1];
+        AudioEngine.tone(n.freq, 0.28, 'sine');
+        composition.push(n.label);
+        document.getElementById('xyloReadout').textContent =
+            `My Composition: ${composition.slice(-16).join(' · ')}`;
+    }
+});
+
+document.getElementById('btnClearXylo').onclick = () => {
+    composition = [];
+    document.getElementById('xyloReadout').textContent = 'My Composition: Tap keys or press 1–8...';
 };
 
-document.querySelectorAll('.goal-choice').forEach(btn => {
+document.querySelectorAll('[data-song]').forEach(btn => {
     btn.onclick = () => {
-        document.querySelectorAll('.goal-choice').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if (state.currentUser) {
-            state.currentUser.dailyGoal = parseInt(btn.dataset.goal, 10);
-            saveState();
-        }
+        const seq = btn.dataset.song === 'twinkle' ? [0,0,4,4,5,5,4] : [0,1,2,3,4,5,6,7];
+        seq.forEach((i, step) => setTimeout(() => AudioEngine.tone(NOTES[i].freq, 0.2, 'sine'), step * 240));
     };
 });
 
-// Initialize App
-renderProfiles();
+function renderDJ() {
+    const pads = [
+        { name: 'Kick', freq: 110, type: 'sine' },
+        { name: 'Snare', freq: 220, type: 'square' },
+        { name: 'Hi-Hat', freq: 880, type: 'triangle' },
+        { name: 'Synth', freq: 440, type: 'sawtooth' }
+    ];
+    const box = document.getElementById('djPads');
+    box.innerHTML = '';
+    pads.forEach(p => {
+        const b = document.createElement('button');
+        b.className = 'dj-pad';
+        b.textContent = `🥁 ${p.name}`;
+        b.onclick = () => AudioEngine.tone(p.freq, 0.16, p.type);
+        box.appendChild(b);
+    });
+}
+
+let grooveTimer = null;
+document.getElementById('btnToggleGroove').onclick = function() {
+    if (grooveTimer) {
+        clearInterval(grooveTimer);
+        grooveTimer = null;
+        this.textContent = '🔁 Start Backing Groove';
+    } else {
+        let step = 0;
+        grooveTimer = setInterval(() => {
+            AudioEngine.tone(step % 2 === 0 ? 130.81 : 196.0, 0.14, 'triangle');
+            step++;
+        }, 420);
+        this.textContent = '⏹ Stop Groove';
+    }
+};
+
+function renderJukebox() {
+    const list = document.getElementById('jukeboxList');
+    list.innerHTML = '';
+    SONGS.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'song-card';
+        card.innerHTML = `<strong>${s.title}</strong><br><button class="btn-secondary btn-small" style="margin-top:8px;">▶ Play</button>`;
+        card.querySelector('button').onclick = () => {
+            document.getElementById('lyricStage').textContent = `🎶 "${s.lyric}"`;
+            AudioEngine.win();
+        };
+        list.appendChild(card);
+    });
+}
+
+function renderWardrobe() {
+    const u = currentExplorer();
+    const grid = document.getElementById('wardrobeGrid');
+    grid.innerHTML = '';
+    WARDROBE_ITEMS.forEach(item => {
+        const owned = u.unlockedWardrobe.includes(item.id);
+        const div = document.createElement('div');
+        div.className = 'wardrobe-item';
+        div.innerHTML = `
+            <div style="font-size:2rem;">${item.icon}</div>
+            <strong>${item.name}</strong>
+            <p class="muted">${owned ? 'Unlocked ✅' : `⭐ ${item.cost}`}</p>
+            <button class="btn-small ${owned ? 'btn-outline' : 'btn-primary'}">${owned ? 'Wear' : 'Unlock'}</button>
+        `;
+        div.querySelector('button').onclick = () => {
+            if (owned) {
+                sayMascot(`${u.name} put on <strong>${item.icon} ${item.name}</strong>!`);
+            } else if (u.stars >= item.cost) {
+                u.stars -= item.cost;
+                u.unlockedWardrobe.push(item.id);
+                saveApp();
+                refreshHUD();
+                renderWardrobe();
+                AudioEngine.win();
+            } else {
+                sayMascot(`Need <strong>${item.cost} ⭐</strong>—finish a quick quest to earn more!`);
+            }
+        };
+        grid.appendChild(div);
+    });
+}
+
+/* =========================================
+   8. MODALS & MASCOT
+   ========================================= */
+document.getElementById('btnGoalModal').onclick = () => document.getElementById('goalModal').classList.remove('hidden');
+document.getElementById('btnSaveGoal').onclick = () => {
+    document.getElementById('goalModal').classList.add('hidden');
+    refreshHUD();
+};
+document.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentExplorer().dailyGoal = parseInt(btn.dataset.goal, 10);
+        saveApp();
+    };
+});
+
+document.getElementById('btnExplorerModal').onclick = () => {
+    const list = document.getElementById('explorerList');
+    list.innerHTML = '';
+    appState.profiles.forEach(p => {
+        const b = document.createElement('button');
+        b.className = p.id === appState.activeId ? 'btn-primary btn-small' : 'btn-outline btn-small';
+        b.textContent = `${p.avatar} ${p.name}`;
+        b.onclick = () => {
+            appState.activeId = p.id;
+            saveApp();
+            document.getElementById('explorerModal').classList.add('hidden');
+            refreshHUD();
+            renderSubjectsGrid();
+            renderWardrobe();
+            if (!p.tested) startPlacement();
+        };
+        list.appendChild(b);
+    });
+    document.getElementById('explorerModal').classList.remove('hidden');
+};
+
+document.getElementById('btnCloseExplorerModal').onclick = () => {
+    document.getElementById('explorerModal').classList.add('hidden');
+};
+
+document.getElementById('createExplorerForm').onsubmit = e => {
+    e.preventDefault();
+    const name = document.getElementById('newExplorerName').value.trim();
+    const age = document.getElementById('newExplorerAge').value;
+    if (!name) return;
+    const newId = 'exp_' + Date.now();
+    appState.profiles.push({
+        id: newId,
+        name,
+        age,
+        avatar: '🌟',
+        stars: 15,
+        streak: 1,
+        dailyGoal: 3,
+        completedToday: 0,
+        tested: false,
+        unlockedWardrobe: [],
+        mastery: defaultMastery(1)
+    });
+    appState.activeId = newId;
+    document.getElementById('newExplorerName').value = '';
+    saveApp();
+    document.getElementById('explorerModal').classList.add('hidden');
+    refreshHUD();
+    startPlacement();
+};
+
+document.getElementById('btnParentModal').onclick = () => {
+    const u = currentExplorer();
+    document.getElementById('parentStatsBody').innerHTML = `
+        <p><strong>Explorer:</strong> ${u.avatar} ${u.name} (Ages ${u.age})</p>
+        <p><strong>Stars:</strong> ⭐ ${u.stars} | <strong>Streak:</strong> 🔥 ${u.streak} days</p>
+        <p><strong>Today's Quests:</strong> ${u.completedToday} / ${u.dailyGoal}</p>
+    `;
+    document.getElementById('parentModal').classList.remove('hidden');
+};
+document.getElementById('btnCloseParentModal').onclick = () => {
+    document.getElementById('parentModal').classList.add('hidden');
+};
+
+function openToolModal(title, html) {
+    document.getElementById('toolModalTitle').textContent = title;
+    document.getElementById('toolModalBody').innerHTML = html;
+    document.getElementById('toolModal').classList.remove('hidden');
+}
+document.getElementById('btnCloseToolModal').onclick = () => {
+    document.getElementById('toolModal').classList.add('hidden');
+};
+
+document.getElementById('openBeatTapper').onclick = () => {
+    let score = 0;
+    openToolModal('🥁 Beat Tapper (+25 ⭐ at 50 pts)', `
+        <p class="muted">Tap the drum pad to build your rhythm score!</p>
+        <h2 id="tapScore" style="margin:14px 0;">Score: 0</h2>
+        <button class="btn-accent" id="tapDrumBtn">🥁 TAP BEAT (+10)</button>
+    `);
+    document.getElementById('tapDrumBtn').onclick = () => {
+        score += 10;
+        AudioEngine.tone(146.83, 0.15, 'triangle');
+        document.getElementById('tapScore').textContent = `Score: ${score}`;
+        if (score === 50) {
+            currentExplorer().stars += 25;
+            currentExplorer().completedToday += 1;
+            saveApp();
+            refreshHUD();
+            AudioEngine.win();
+            sayMascot('🎉 50 points! You earned <strong>+25 ⭐</strong>!');
+        }
+    };
+};
+
+document.getElementById('openAnimalMatch').onclick = () => {
+    openToolModal('🦉 Animal Orchestra Match', `
+        <p class="muted">Pick the instrument that fits each friend:</p>
+        <div class="option-grid">
+            <button class="pad-option pad-0" onclick="AudioEngine.win(); sayMascot('🦁 Lion loves the deep Bass!');">🦁 Lion → Bass</button>
+            <button class="pad-option pad-1" onclick="AudioEngine.win(); sayMascot('🐦 Bird loves the high Flute!');">🐦 Bird → Flute</button>
+        </div>
+    `);
+};
+
+document.getElementById('openSongMaker').onclick = () => {
+    openToolModal('🎤 Song Maker', `
+        <input id="rhymeWord" placeholder="Type a word (e.g. jump, sing, star)..." style="width:100%; padding:10px; border-radius:10px; border:2px solid #DFE6E9;">
+        <button class="btn-primary btn-small" style="margin-top:10px;" id="genRhymeBtn">Make Rhyme</button>
+        <p id="rhymeOut" style="margin-top:12px; font-weight:800;"></p>
+    `);
+    document.getElementById('genRhymeBtn').onclick = () => {
+        const w = document.getElementById('rhymeWord').value.trim() || 'beat';
+        document.getElementById('rhymeOut').textContent = `🎵 "Tap to the ${w}, move your feet, learning with music is super sweet!"`;
+        AudioEngine.tone(523.25, 0.2, 'sine');
+    };
+};
+
+document.getElementById('openStorybook').onclick = () => {
+    openToolModal('📖 Musical Storybook', `
+        <p>Once upon a beat, a curious explorer found a glowing xylophone in the forest. Every note planted a bright musical flower—and the higher they climbed, the braver their song became!</p>
+    `);
+};
+
+document.getElementById('mascotAvatar').onclick = () => {
+    AudioEngine.tone(659.25, 0.16, 'sine');
+    sayMascot('Tip: Tap <strong>All 12 Subjects</strong> and hit <strong>Swap Game Style</strong> inside any quest!');
+};
+
+// Boot
+refreshHUD();
+renderABC();
+renderQuickSubjects();
+renderSubjectsGrid();
+renderXylophone();
+renderDJ();
+renderJukebox();
+renderWardrobe();
